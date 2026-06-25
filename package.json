@@ -13,8 +13,7 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test:coverage": "jest --coverage --runInBand",
     "test:coverage:backend-011": "jest --runInBand --coverage src/middleware/rateLimit.test.ts src/middleware/startupAuthRateTierPolicy.test.ts src/routes/health.test.ts --collectCoverageFrom='src/middleware/rateLimit.ts' --collectCoverageFrom='src/middleware/startupAuthRateTierPolicy.ts' --coverageThreshold='{\"global\":{\"statements\":95,\"lines\":95,\"functions\":95}}'",
-    "verify-audit-integrity": "npx ts-node --transpile-only src/cli/verifyAuditIntegrity.ts",
-    "test:audit-integrity": "jest --runInBand src/security/auditHashChain.test.ts src/security/auditIntegrityScheduler.test.ts src/cli/verifyAuditIntegrity.test.ts"
+    "audit:ci": "ts-node scripts/audit-gate.ts"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^14.5.0",
