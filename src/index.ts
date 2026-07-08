@@ -40,6 +40,9 @@ import { AuditPurgeService } from "./services/auditPurgeService";
 import { PayoutDriftRepository } from "./db/repositories/payoutDriftRepository";
 import { PayoutDriftDetector } from "./services/payoutDriftDetector";
 import { MetricsCollector } from "./lib/metrics";
+import { createAMLRoutes } from "./routes/amlRoutes";
+import { createAMLService } from "./aml/amlService";
+import { InMemorySecurityAuditRepository } from "./security/audit";
 
 const port = env.PORT;
 const API_VERSION_PREFIX = env.API_VERSION_PREFIX;
@@ -620,6 +623,11 @@ export function createApp(dependencies: AppDependencies = {}): express.Express {
 
   // Mount admin router
   apiRouter.use("/admin", createAdminRouter(auditLogRepo));
+
+  // Initialize AML service and routes
+  const amlAuditRepo = new InMemorySecurityAuditRepository();
+  const amlService = createAMLService(pool, amlAuditRepo, 'system');
+  apiRouter.use("/aml", createAMLRoutes(amlService));
 
   app.use(API_VERSION_PREFIX, apiRouter);
   app.use((_req, _res, next) => next(Errors.notFound("Route not found")));
