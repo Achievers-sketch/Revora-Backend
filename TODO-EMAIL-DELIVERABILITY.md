@@ -42,8 +42,13 @@
 ## Step 8: Documentation
 - [ ] Update docs/transactional-email-providers.md
 
+## Step 7: Tests
+- [x] `emailDeliverabilityService.test.ts` — 24/24 passed
+- [x] `emailWebhooks.test.ts` — 19/19 passed
+- [x] Update `emailService.test.ts` — no changes needed (providers unchanged)
+
 ## Step 9: Run Tests
-- [ ] `npm install` (running)
-- [ ] `npm test`
+- [x] `npm install` — completed
+- [ ] `npm test` — full suite with coverage
 - [ ] Verify 95%+ coverage
 
