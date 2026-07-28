@@ -38,7 +38,11 @@ import { EmailDeliverabilityService } from "./services/emailDeliverabilityServic
 import { EmailDeliverabilityRepository } from "./db/repositories/emailDeliverabilityRepository";
 import { createEmailWebhooksRouter } from "./routes/emailWebhooks";
 import { createAdminRouter } from "./routes/admin";
+import { createAdminKycRiskTierRouter } from "./routes/adminKycRiskTier";
 import { AuditLogRepository } from "./db/repositories/auditLogRepository";
+import { TenantSettingsRepository } from "./db/repositories/tenantSettingsRepository";
+import { ContractUpgradeOrchestratorService } from "./services/contractUpgradeOrchestratorService";
+import { createContractUpgradeRouter } from "./routes/contractUpgradeRoutes";
 import { AuditPurgeService } from "./services/auditPurgeService";
 import { PayoutDriftRepository } from "./db/repositories/payoutDriftRepository";
 import { PayoutDriftDetector } from "./services/payoutDriftDetector";
@@ -46,6 +50,7 @@ import { MetricsCollector } from "./lib/metrics";
 import { createAMLRoutes } from "./routes/amlRoutes";
 import { createAMLService } from "./aml/amlService";
 import { InMemorySecurityAuditRepository } from "./security/audit";
+import { Keypair } from '@stellar/stellar-sdk';
 
 const port = env.PORT;
 const API_VERSION_PREFIX = env.API_VERSION_PREFIX;
@@ -648,12 +653,28 @@ export function createApp(dependencies: AppDependencies = {}): express.Express {
 
   // Initialize repositories for admin and audit routes
   const auditLogRepo = new AuditLogRepository(pool);
+  const tenantSettingsRepo = new TenantSettingsRepository(pool);
+  const contractUpgradeService = env.STELLAR_SERVER_SECRET
+    ? new ContractUpgradeOrchestratorService(
+        pool,
+        auditLogRepo,
+        tenantSettingsRepo,
+        Keypair.fromSecret(env.STELLAR_SERVER_SECRET),
+      )
+    : null;
 
   // Mount admin router
   apiRouter.use("/admin", createAdminRouter(auditLogRepo));
+  apiRouter.use("/admin", createAdminKycRiskTierRouter(pool, amlAuditRepo));
+
+  if (contractUpgradeService) {
+    apiRouter.use(
+      "/contract-upgrades",
+      createContractUpgradeRouter(contractUpgradeService),
+    );
+  }
 
   // Initialize AML service and routes
-  const amlAuditRepo = new InMemorySecurityAuditRepository();
   const amlService = createAMLService(pool, amlAuditRepo, 'system');
   apiRouter.use("/aml", createAMLRoutes(amlService));
 
